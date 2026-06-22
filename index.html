@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulator Hub</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f7fb;
+      color: #102a43;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    .hero {
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 16px 40px rgba(16, 42, 67, 0.08);
+      padding: 32px;
+      margin-bottom: 28px;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      line-height: 1.1;
+    }
+    p {
+      margin: 0 0 20px;
+      line-height: 1.75;
+      color: #334e68;
+      font-size: 1rem;
+    }
+    .steps {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 12px;
+    }
+    .steps li {
+      background: #eef4ff;
+      border: 1px solid #d8e7ff;
+      border-radius: 14px;
+      padding: 16px;
+      color: #1b3a64;
+      font-weight: 600;
+    }
+    .guide {
+      display: grid;
+      gap: 18px;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 14px 30px rgba(16, 42, 67, 0.08);
+      padding: 26px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 20px 42px rgba(16, 42, 67, 0.12);
+    }
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 1.35rem;
+    }
+    .card p {
+      margin: 0 0 16px;
+      color: #334e68;
+      line-height: 1.65;
+    }
+    .card a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 18px;
+      border-radius: 999px;
+      background: #1d70b8;
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .card a:hover {
+      background: #165d9a;
+    }
+    @media (max-width: 680px) {
+      main {
+        padding: 24px 16px 40px;
+      }
+      .hero,
+      .card {
+        padding: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <h1>Welcome to the Simulator Hub</h1>
+      <p>Find the simulator you need in one place. Each card below explains what the simulator does and gives you a direct link so you can get started quickly.</p>
+      <ul class="steps">
+        <li>Choose the simulator that fits your task.</li>
+        <li>Click the link to open the selected simulator.</li>
+        <li>Follow the simulator instructions and run your scenario.</li>
+      </ul>
+    </section>
+
+    <section class="guide">
+      <article class="card">
+        <h2>Calculator Simulator</h2>
+        <p>Run quick calculations, test formulas, and verify values in a clean calculator interface.</p>
+        <a href="calculator.html">Open Calculator Simulator</a>
+      </article>
+
+      <article class="card">
+        <h2>Physics Simulator</h2>
+        <p>Simulate motion, forces, energy, and physics interactions for learning and testing.</p>
+        <a href="physics.html">Open Physics Simulator</a>
+      </article>
+
+      <article class="card">
+        <h2>Finance Simulator</h2>
+        <p>Explore budgets, loans, savings, and investment scenarios with step-by-step controls.</p>
+        <a href="finance.html">Open Finance Simulator</a>
+      </article>
+
+      <article class="card">
+        <h2>Need help?</h2>
+        <p>If you need support or can’t find the right simulator, use this page to get the help you need.</p>
+        <a href="support.html">Get Support</a>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
