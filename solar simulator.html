@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>태양광 발전 금융 시뮬레이터</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --sun: #F5A623;
+    --sky: #0A7FC2;
+    --sky-deep: #054E7A;
+    --sky-light: #E8F4FD;
+    --panel: #1A2B3C;
+    --panel-mid: #2C4460;
+    --grass: #2D7A3A;
+    --white: #FFFFFF;
+    --off: #F7F9FC;
+    --border: #D0DDE8;
+    --text: #1A2B3C;
+    --muted: #5A7490;
+    --neg: #C0392B;
+    --pos: #1A7A3C;
+    --warn: #E67E22;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--off);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, var(--panel) 0%, var(--panel-mid) 60%, var(--sky-deep) 100%);
+    color: var(--white);
+    padding: 28px 40px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -60px;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(245,166,35,0.35) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .sun-icon {
+    width: 48px; height: 48px;
+    background: var(--sun);
+    border-radius: 50%;
+    box-shadow: 0 0 0 6px rgba(245,166,35,0.25), 0 0 0 12px rgba(245,166,35,0.1);
+    flex-shrink: 0;
+  }
+  header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  header p {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 2px;
+    font-weight: 300;
+  }
+
+  /* LAYOUT */
+  .wrapper {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+
+  /* SECTION CARD */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 28px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--sky-deep);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px; height: 16px;
+    background: var(--sun);
+    border-radius: 2px;
+  }
+
+  /* FORM GRID */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 16px 24px;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .form-group input,
+  .form-group select {
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--white);
+    transition: border-color 0.15s;
+    outline: none;
+  }
+  .form-group input:focus,
+  .form-group select:focus { border-color: var(--sky); }
+  .form-group .hint {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .form-group .unit {
+    position: relative;
+  }
+  .form-group .unit input {
+    padding-right: 46px;
+    width: 100%;
+  }
+  .form-group .unit span {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  /* RADIO GROUP */
+  .radio-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 400 !important;
+    color: var(--text) !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    cursor: pointer;
+    padding: 7px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    transition: all 0.15s;
+  }
+  .radio-group input[type=radio] { display: none; }
+  .radio-group input[type=radio]:checked + span {
+    color: var(--sky-deep);
+    font-weight: 600;
+  }
+  .radio-group label:has(input:checked) {
+    border-color: var(--sky);
+    background: var(--sky-light);
+  }
+
+  /* BUTTON */
+  .btn-run {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--sky) 0%, var(--sky-deep) 100%);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: 0.3px;
+    margin-top: 8px;
+  }
+  .btn-run:hover { opacity: 0.92; transform: translateY(-1px); }
+  .btn-run:active { transform: translateY(0); }
+
+  /* KPI ROW */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .kpi {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    border-top: 3px solid var(--sky);
+  }
+  .kpi.sun { border-top-color: var(--sun); }
+  .kpi.grass { border-top-color: var(--grass); }
+  .kpi.neg { border-top-color: var(--neg); }
+  .kpi-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .kpi-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--panel);
+    line-height: 1.2;
+  }
+  .kpi-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  /* TABLES */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead tr {
+    background: var(--panel);
+    color: var(--white);
+  }
+  thead th {
+    padding: 10px 14px;
+    text-align: right;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  thead th:first-child { text-align: center; }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:hover { background: var(--sky-light); }
+  tbody td {
+    padding: 9px 14px;
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+  tbody td:first-child {
+    text-align: center;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--panel);
+  }
+  tfoot tr {
+    background: var(--panel-mid);
+    color: var(--white);
+    font-weight: 700;
+  }
+  tfoot td {
+    padding: 10px 14px;
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+  tfoot td:first-child {
+    text-align: center;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+  }
+  .neg-val { color: var(--neg); }
+  .pos-val { color: var(--pos); }
+  .cum-pos { color: var(--pos); font-weight: 600; }
+  .cum-neg { color: var(--neg); font-weight: 600; }
+  .grace-row { background: rgba(230, 126, 34, 0.06) !important; }
+  .repay-end { background: rgba(10, 127, 194, 0.06) !important; }
+
+  /* ASSUMPTIONS BOX */
+  .assumptions {
+    margin-top: 14px;
+    padding: 14px 18px;
+    background: var(--off);
+    border-left: 3px solid var(--sun);
+    border-radius: 0 6px 6px 0;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  .assumptions strong { color: var(--text); }
+
+  /* RESULT SECTION */
+  #results { display: none; }
+  #results.visible { display: block; }
+
+  .section-label {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--panel);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label .badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--sky-light);
+    color: var(--sky-deep);
+    letter-spacing: 0.3px;
+  }
+
+  /* PAYBACK HIGHLIGHT */
+  .payback-row { background: rgba(245,166,35,0.15) !important; }
+  .payback-row td { font-weight: 700 !important; color: #7A4A00 !important; }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    header { padding: 20px; }
+    .wrapper { padding: 16px 12px 40px; }
+    .card { padding: 18px 16px; }
+  }
+
+  .spinner {
+    display: none;
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .spinner.active { display: block; }
+  .spin {
+    display: inline-block;
+    width: 28px; height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--sky);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-bottom: 10px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* RATE CONTROL */
+  .rate-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .rate-ctrl:focus-within { border-color: var(--sky); }
+  .rate-btn {
+    width: 34px;
+    flex-shrink: 0;
+    background: var(--off);
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--sky-deep);
+    font-weight: 700;
+    padding: 0;
+    height: 36px;
+    transition: background 0.1s;
+  }
+  .rate-btn:hover { background: var(--sky-light); }
+  .rate-btn:active { background: var(--border); }
+  .rate-ctrl input {
+    border: none !important;
+    border-radius: 0 !important;
+    text-align: center;
+    flex: 1;
+    min-width: 0;
+    font-weight: 600;
+    padding: 8px 4px !important;
+  }
+  .rate-ctrl input:focus { outline: none; }
+  .rate-unit {
+    padding: 0 10px;
+    font-size: 12px;
+    color: var(--muted);
+    flex-shrink: 0;
+    border-left: 1px solid var(--border);
+    height: 36px;
+    display: flex;
+    align-items: center;
+    background: var(--off);
+  }
+  .loan2-title { color: var(--grass) !important; }
+  .loan2-title::before { background: var(--grass) !important; }
+  .loan-card:nth-child(2) { border-top: 3px solid var(--grass); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="sun-icon"></div>
+    <div>
+      <h1>태양광 발전 사업 금융 시뮬레이터</h1>
+      <p>500kW 이하 지상형 · 월별 현금흐름 및 20년 장기 손익 분석</p>
+    </div>
+  </div>
+</header>
+
+<div class="wrapper">
+
+  <!-- INPUT SECTION -->
+  <div class="card">
+    <div class="card-title">사업 기본 정보</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>지역</label>
+        <select id="region">
+          <option value="고흥">전남 고흥</option>
+          <option value="해남">전남 해남</option>
+          <option value="나주">전남 나주</option>
+          <option value="광주">광주광역시</option>
+          <option value="부안">전북 부안</option>
+          <option value="군산">전북 군산</option>
+          <option value="전주">전북 전주</option>
+          <option value="천안">충남 천안</option>
+          <option value="홍성">충남 홍성</option>
+          <option value="청주">충북 청주</option>
+          <option value="대전">대전광역시</option>
+          <option value="안동">경북 안동</option>
+          <option value="경주">경북 경주</option>
+          <option value="포항">경북 포항</option>
+          <option value="대구">대구광역시</option>
+          <option value="울산">울산광역시</option>
+          <option value="창원">경남 창원</option>
+          <option value="진주">경남 진주</option>
+          <option value="제주">제주시</option>
+          <option value="수원">경기 수원</option>
+          <option value="평택">경기 평택</option>
+          <option value="춘천">강원 춘천</option>
+          <option value="강릉">강원 강릉</option>
+          <option value="서울">서울특별시</option>
+          <option value="인천">인천광역시</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>설비 용량</label>
+        <div class="unit">
+          <input type="number" id="capacity" value="500" min="1">
+          <span>kW</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>연간 발전량 입력 방식</label>
+        <select id="genMode">
+          <option value="auto">지역 일조시간 기반 자동 계산</option>
+          <option value="manual">직접 입력</option>
+        </select>
+      </div>
+      <div class="form-group" id="manualGenGroup" style="display:none">
+        <label>연간 발전량 (직접 입력)</label>
+        <div class="unit">
+          <input type="number" id="manualGen" value="700000" min="1">
+          <span>kWh</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>kWh 판매단가 (SMP+REC)</label>
+        <div class="rate-ctrl">
+          <button type="button" class="rate-btn" onclick="adjustStep('pricePerKwh',-1,1,999,1,'원')">▼</button>
+          <input type="number" id="pricePerKwh" value="170" min="1" max="999" step="1">
+          <button type="button" class="rate-btn" onclick="adjustStep('pricePerKwh',1,1,999,1,'원')">▲</button>
+          <span class="rate-unit">원</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>연간 유지보수비 기준</label>
+        <select id="maintMode">
+          <option value="pct">연간 매출의 5%</option>
+          <option value="fixed">고정 금액 직접 입력</option>
+        </select>
+      </div>
+      <div class="form-group" id="maintFixedGroup" style="display:none">
+        <label>연간 유지보수비 (고정)</label>
+        <div class="unit">
+          <input type="number" id="maintFixed" value="5000000" min="0">
+          <span>원</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOAN 1 -->
+  <div class="card loan-card" id="loan1Card">
+    <div class="card-title">대출 ① 사업자 대출</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>대출 금액</label>
+        <div class="rate-ctrl">
+          <button type="button" class="rate-btn" onclick="adjustStep('loan1Amt',-.1,0,9999,0.1,'억원');updateAmtHint('loan1Amt','loan1AmtHint')">▼</button>
+          <input type="number" id="loan1Amt" value="7" min="0" max="9999" step="0.1" oninput="updateAmtHint('loan1Amt','loan1AmtHint')">
+          <button type="button" class="rate-btn" onclick="adjustStep('loan1Amt',.1,0,9999,0.1,'억원');updateAmtHint('loan1Amt','loan1AmtHint')">▲</button>
+          <span class="rate-unit">억원</span>
+        </div>
+        <span class="hint" id="loan1AmtHint">₩700,000,000</span>
+      </div>
+      <div class="form-group">
+        <label>대출 금리</label>
+        <div class="rate-ctrl">
+          <button type="button" class="rate-btn" onclick="adjustRate('loan1Rate',-0.1)">▼</button>
+          <input type="number" id="loan1Rate" value="4.5" min="0" max="30" step="0.1" oninput="clampRate(this)">
+          <button type="button" class="rate-btn" onclick="adjustRate('loan1Rate',0.1)">▲</button>
+          <span class="rate-unit">%</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>거치 기간</label>
+        <div class="rate-ctrl">
+          <button type="button" class="rate-btn" onclick="adjustStep('loan1Grace',-1,0,10,1,'년')">▼</button>
+          <input type="number" id="loan1Grace" value="1" min="0" max="10" step="1">
+          <button type="button" class="rate-btn" onclick="adjustStep('loan1Grace',1,0,10,1,'년')">▲</button>
+          <span class="rate-unit">년</span>
+        </div>
+        <span class="hint">이자만 납부하는 기간</span>
+      </div>
+      <div class="form-group">
+        <label>총 대출 기간</label>
+        <div class="rate-ctrl">
+          <button type="button" class="rate-btn" onclick="adjustStep('loan1Term',-1,1,30,1,'년')">▼</button>
+          <input type="number" id="loan1Term" value="15" min="1" max="30" step="1">
+          <button type="button" class="rate-btn" onclick="adjustStep('loan1Term',1,1,30,1,'년')">▲</button>
+          <span class="rate-unit">년</span>
+        </div>
+        <span class="hint">거치 기간 포함</span>
+      </div>
+      <div class="form-group" style="grid-column: span 2;">
+        <label>상환 방식</label>
+        <div class="radio-group">
+          <label><input type="radio" name="repay1Type" value="equal_payment" checked><span>원리금균등상환</span></label>
+          <label><input type="radio" name="repay1Type" value="equal_principal"><span>원금균등상환</span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOAN 2 -->
+  <div class="card loan-card" id="loan2Card">
+    <div class="card-title loan2-title">대출 ② 신용대출</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>대출 금액</label>
+        <div class="rate-ctrl">
+          <button type="button" class="rate-btn" onclick="adjustStep('loan2Amt',-.1,0,9999,0.1,'억원');updateAmtHint('loan2Amt','loan2AmtHint')">▼</button>
+          <input type="number" id="loan2Amt" value="1" min="0" max="9999" step="0.1" oninput="updateAmtHint('loan2Amt','loan2AmtHint')">
+          <button type="button" class="rate-btn" onclick="adjustStep('loan2Amt',.1,0,9999,0.1,'억원');updateAmtHint('loan2Amt','loan2AmtHint')">▲</button>
+          <span class="rate-unit">억원</span>
+        </div>
+        <span class="hint" id="loan2AmtHint">₩100,000,000</span>
+      </div>
+      <div class="form-group">
+        <label>대출 금리</label>
+        <div class="rate-ctrl">
+          <button type="button" class="rate-btn" onclick="adjustRate('loan2Rate',-0.1)">▼</button>
+          <input type="number" id="loan2Rate" value="6.5" min="0" max="30" step="0.1" oninput="clampRate(this)">
+          <button type="button" class="rate-btn" onclick="adjustRate('loan2Rate',0.1)">▲</button>
+          <span class="rate-unit">%</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>거치 기간</label>
+        <div class="rate-ctrl">
+          <button type="button" class="rate-btn" onclick="adjustStep('loan2Grace',-1,0,10,1,'년')">▼</button>
+          <input type="number" id="loan2Grace" value="0" min="0" max="10" step="1">
+          <button type="button" class="rate-btn" onclick="adjustStep('loan2Grace',1,0,10,1,'년')">▲</button>
+          <span class="rate-unit">년</span>
+        </div>
+        <span class="hint">이자만 납부하는 기간</span>
+      </div>
+      <div class="form-group">
+        <label>총 대출 기간</label>
+        <div class="rate-ctrl">
+          <button type="button" class="rate-btn" onclick="adjustStep('loan2Term',-1,1,30,1,'년')">▼</button>
+          <input type="number" id="loan2Term" value="5" min="1" max="30" step="1">
+          <button type="button" class="rate-btn" onclick="adjustStep('loan2Term',1,1,30,1,'년')">▲</button>
+          <span class="rate-unit">년</span>
+        </div>
+        <span class="hint">거치 기간 포함</span>
+      </div>
+      <div class="form-group" style="grid-column: span 2;">
+        <label>상환 방식</label>
+        <div class="radio-group">
+          <label><input type="radio" name="repay2Type" value="equal_payment" checked><span>원리금균등상환</span></label>
+          <label><input type="radio" name="repay2Type" value="equal_principal"><span>원금균등상환</span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-run" onclick="runSimulation()">⚡ 시뮬레이션 실행</button>
+
+  <!-- SPINNER -->
+  <div class="spinner" id="spinner">
+    <div class="spin"></div>
+    <div>계산 중...</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+
+    <!-- KPI -->
+    <div class="kpi-row" id="kpiRow"></div>
+
+    <!-- MONTHLY TABLE -->
+    <div class="card">
+      <div class="section-label">
+        1년 차 월별 예상 현금흐름
+        <span class="badge">MONTHLY · YEAR 1</span>
+      </div>
+      <div class="table-wrap">
+        <table id="monthlyTable">
+          <thead>
+            <tr>
+              <th>월</th>
+              <th>발전량 (kWh)</th>
+              <th>매출 (원)</th>
+              <th>대출 상환액 (원)</th>
+              <th>유지보수비 (원)</th>
+              <th>순수익 (원)</th>
+            </tr>
+          </thead>
+          <tbody id="monthlyBody"></tbody>
+          <tfoot id="monthlyFoot"></tfoot>
+        </table>
+      </div>
+      <div class="assumptions" id="monthlyAssumptions"></div>
+    </div>
+
+    <!-- YEARLY TABLE -->
+    <div class="card">
+      <div class="section-label">
+        1~20년 차 연도별 장기 손익 흐름
+        <span class="badge">ANNUAL · 20-YEAR</span>
+      </div>
+      <div class="table-wrap">
+        <table id="yearlyTable">
+          <thead>
+            <tr>
+              <th>연차</th>
+              <th>발전량 (kWh)</th>
+              <th>매출 (원)</th>
+              <th>상환 원금 (원)</th>
+              <th>이자 (원)</th>
+              <th>원리금 합계 (원)</th>
+              <th>유지보수비 (원)</th>
+              <th>지출 합계 (원)</th>
+              <th>순수익 (원)</th>
+              <th>누적 순수익 (원)</th>
+            </tr>
+          </thead>
+          <tbody id="yearlyBody"></tbody>
+          <tfoot id="yearlyFoot"></tfoot>
+        </table>
+      </div>
+      <div class="assumptions" id="yearlyAssumptions"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── REGION DATA: 월별 발전 비중 & 연간 피크시간(시간/kW) ──────────────────
+const REGION_DATA = {
+  고흥:  { peakH: 1420, monthly: [0.052,0.065,0.090,0.099,0.103,0.095,0.082,0.090,0.088,0.088,0.060,0.048] },
+  해남:  { peakH: 1400, monthly: [0.052,0.065,0.090,0.099,0.103,0.095,0.082,0.090,0.088,0.088,0.060,0.048] },
+  나주:  { peakH: 1380, monthly: [0.051,0.064,0.089,0.099,0.103,0.095,0.083,0.090,0.088,0.088,0.061,0.049] },
+  광주:  { peakH: 1340, monthly: [0.051,0.064,0.089,0.099,0.103,0.095,0.083,0.090,0.088,0.088,0.061,0.049] },
+  부안:  { peakH: 1360, monthly: [0.052,0.065,0.089,0.099,0.103,0.095,0.082,0.090,0.088,0.088,0.061,0.048] },
+  군산:  { peakH: 1350, monthly: [0.052,0.065,0.089,0.099,0.103,0.095,0.082,0.090,0.088,0.088,0.061,0.048] },
+  전주:  { peakH: 1320, monthly: [0.051,0.064,0.089,0.099,0.103,0.095,0.083,0.090,0.088,0.088,0.061,0.049] },
+  천안:  { peakH: 1280, monthly: [0.051,0.063,0.088,0.099,0.103,0.095,0.083,0.091,0.088,0.088,0.062,0.049] },
+  홍성:  { peakH: 1300, monthly: [0.051,0.063,0.088,0.099,0.103,0.095,0.083,0.091,0.088,0.088,0.062,0.049] },
+  청주:  { peakH: 1270, monthly: [0.051,0.063,0.088,0.099,0.103,0.095,0.083,0.091,0.088,0.088,0.062,0.049] },
+  대전:  { peakH: 1290, monthly: [0.051,0.063,0.088,0.099,0.103,0.095,0.083,0.091,0.088,0.088,0.062,0.049] },
+  안동:  { peakH: 1310, monthly: [0.052,0.064,0.089,0.099,0.103,0.095,0.082,0.090,0.088,0.088,0.060,0.050] },
+  경주:  { peakH: 1350, monthly: [0.052,0.064,0.089,0.099,0.103,0.095,0.082,0.090,0.088,0.088,0.060,0.050] },
+  포항:  { peakH: 1330, monthly: [0.051,0.063,0.089,0.099,0.103,0.095,0.083,0.091,0.088,0.088,0.061,0.049] },
+  대구:  { peakH: 1340, monthly: [0.052,0.064,0.089,0.099,0.103,0.095,0.082,0.090,0.088,0.088,0.060,0.050] },
+  울산:  { peakH: 1320, monthly: [0.052,0.064,0.089,0.099,0.103,0.095,0.082,0.090,0.088,0.088,0.060,0.050] },
+  창원:  { peakH: 1360, monthly: [0.052,0.065,0.089,0.099,0.103,0.095,0.082,0.090,0.088,0.088,0.060,0.049] },
+  진주:  { peakH: 1370, monthly: [0.052,0.065,0.090,0.099,0.103,0.095,0.082,0.090,0.088,0.088,0.060,0.048] },
+  제주:  { peakH: 1430, monthly: [0.053,0.066,0.090,0.099,0.102,0.094,0.081,0.089,0.088,0.089,0.062,0.047] },
+  수원:  { peakH: 1240, monthly: [0.050,0.062,0.088,0.100,0.104,0.096,0.083,0.091,0.088,0.087,0.062,0.049] },
+  평택:  { peakH: 1250, monthly: [0.050,0.062,0.088,0.100,0.104,0.096,0.083,0.091,0.088,0.087,0.062,0.049] },
+  춘천:  { peakH: 1200, monthly: [0.049,0.061,0.087,0.100,0.105,0.096,0.083,0.092,0.088,0.087,0.062,0.050] },
+  강릉:  { peakH: 1220, monthly: [0.050,0.062,0.088,0.100,0.104,0.095,0.082,0.091,0.088,0.088,0.062,0.050] },
+  서울:  { peakH: 1200, monthly: [0.049,0.061,0.087,0.100,0.105,0.096,0.083,0.092,0.088,0.087,0.062,0.050] },
+  인천:  { peakH: 1210, monthly: [0.050,0.062,0.088,0.100,0.104,0.096,0.083,0.091,0.088,0.087,0.062,0.049] },
+};
+
+const MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+
+function fmt(n) {
+  return '₩' + Math.round(n).toLocaleString('ko-KR');
+}
+function fmtKwh(n) {
+  return Math.round(n).toLocaleString('ko-KR');
+}
+
+// Toggle manual gen
+document.getElementById('genMode').addEventListener('change', function() {
+  document.getElementById('manualGenGroup').style.display = this.value === 'manual' ? '' : 'none';
+});
+document.getElementById('maintMode').addEventListener('change', function() {
+  document.getElementById('maintFixedGroup').style.display = this.value === 'fixed' ? '' : 'none';
+});
+
+// Amount hint helpers
+function updateAmtHint(inputId, hintId) {
+  const v = parseFloat(document.getElementById(inputId).value) || 0;
+  const won = Math.round(v * 100000000);
+  document.getElementById(hintId).textContent = '₩' + won.toLocaleString('ko-KR');
+}
+function adjustRate(inputId, delta) {
+  const el = document.getElementById(inputId);
+  let v = Math.round((parseFloat(el.value) + delta) * 10) / 10;
+  if (v < 0) v = 0;
+  if (v > 30) v = 30;
+  el.value = v.toFixed(1);
+}
+function adjustStep(inputId, delta, mn, mx, step, unit) {
+  const el = document.getElementById(inputId);
+  const decimals = step < 1 ? String(step).split('.')[1].length : 0;
+  const factor = Math.pow(10, decimals);
+  let v = Math.round((parseFloat(el.value || 0) + delta) * factor) / factor;
+  v = Math.min(mx, Math.max(mn, v));
+  el.value = decimals > 0 ? v.toFixed(decimals) : String(v);
+  el.dispatchEvent(new Event('input'));
+}
+function clampRate(el) {
+  let v = parseFloat(el.value);
+  if (isNaN(v)) v = 0;
+  if (v < 0) el.value = '0.0';
+  if (v > 30) el.value = '30.0';
+}
+
+function runSimulation() {
+  const spinner = document.getElementById('spinner');
+  const results = document.getElementById('results');
+  results.classList.remove('visible');
+  spinner.classList.add('active');
+
+  setTimeout(() => {
+    try {
+      _compute();
+    } catch(e) {
+      alert('계산 오류: ' + e.message);
+    }
+    spinner.classList.remove('active');
+    results.classList.add('visible');
+    results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 300);
+}
+
+function _compute() {
+  const region     = document.getElementById('region').value;
+  const capacity   = parseFloat(document.getElementById('capacity').value);
+  const genMode    = document.getElementById('genMode').value;
+  const priceKwh   = parseFloat(document.getElementById('pricePerKwh').value);
+  // Loan 1 (사업자)
+  const loan1Amt    = Math.round((parseFloat(document.getElementById('loan1Amt').value)||0) * 100000000);
+  const loan1Rate   = parseFloat(document.getElementById('loan1Rate').value)||0;
+  const loan1Grace  = parseInt(document.getElementById('loan1Grace').value)||0;
+  const loan1Term   = parseInt(document.getElementById('loan1Term').value)||1;
+  const repay1Type  = document.querySelector('input[name=repay1Type]:checked').value;
+  // Loan 2 (신용)
+  const loan2Amt    = Math.round((parseFloat(document.getElementById('loan2Amt').value)||0) * 100000000);
+  const loan2Rate   = parseFloat(document.getElementById('loan2Rate').value)||0;
+  const loan2Grace  = parseInt(document.getElementById('loan2Grace').value)||0;
+  const loan2Term   = parseInt(document.getElementById('loan2Term').value)||1;
+  const repay2Type  = document.querySelector('input[name=repay2Type]:checked').value;
+  // Combined (for backward compat references)
+  const loanAmt     = loan1Amt + loan2Amt;
+  const maintMode  = document.getElementById('maintMode').value;
+  const maintFixed = parseFloat(document.getElementById('maintFixed').value) || 0;
+
+  const rData = REGION_DATA[region] || REGION_DATA['고흥'];
+  const monthWeights = rData.monthly;
+
+  // Annual generation
+  let annualGen;
+  if (genMode === 'manual') {
+    annualGen = parseFloat(document.getElementById('manualGen').value);
+  } else {
+    annualGen = capacity * rData.peakH; // kW × 연간 피크시간
+  }
+
+  const annualRevYear1 = annualGen * priceKwh;
+
+  // Helper: build per-loan schedule config
+  function makeLoanCfg(amt, ratePct, grace, term, repayType) {
+    const mR = ratePct / 100 / 12;
+    const repayMo = (term - grace) * 12;
+    let mPmt = 0;
+    if (repayType === 'equal_payment' && repayMo > 0) {
+      mPmt = mR === 0 ? amt / repayMo
+           : amt * mR * Math.pow(1+mR, repayMo) / (Math.pow(1+mR, repayMo) - 1);
+    }
+    return { amt, ratePct, grace, term, repayType, mR, repayMo, mPmt };
+  }
+
+  const L1 = makeLoanCfg(loan1Amt, loan1Rate, loan1Grace, loan1Term, repay1Type);
+  const L2 = makeLoanCfg(loan2Amt, loan2Rate, loan2Grace, loan2Term, repay2Type);
+
+  // Combined year-1 monthly interest (for monthly table)
+  const monthlyInterestGrace = L1.amt * L1.mR + L2.amt * L2.mR;
+  const gracePeriod = Math.max(L1.grace, L2.grace); // for row coloring
+
+  // ── MONTHLY TABLE (Year 1) ─────────────────────────────────────────────
+  const monthlyBody = document.getElementById('monthlyBody');
+  const monthlyFoot = document.getElementById('monthlyFoot');
+  monthlyBody.innerHTML = '';
+
+  let totGen=0, totRev=0, totRepay=0, totMaint=0, totNet=0;
+
+  // Year 1 principal maintenance
+  const year1Revenue = annualRevYear1;
+  const year1MaintCost = maintMode === 'pct' ? year1Revenue * 0.05 : maintFixed;
+
+  for (let m = 0; m < 12; m++) {
+    const mGen  = annualGen * monthWeights[m];
+    const mRev  = mGen * priceKwh;
+    const mMaint = year1MaintCost * monthWeights[m]; // distribute proportionally
+
+    // Year 1: all grace period (interest only)
+    const mRepay = monthlyInterestGrace;
+
+    const mNet  = mRev - mRepay - mMaint;
+    totGen += mGen; totRev += mRev; totRepay += mRepay; totMaint += mMaint; totNet += mNet;
+
+    const tr = document.createElement('tr');
+    if (gracePeriod >= 1) tr.classList.add('grace-row');
+    tr.innerHTML = `
+      <td>${MONTH_NAMES[m]}</td>
+      <td>${fmtKwh(mGen)}</td>
+      <td>${fmt(mRev)}</td>
+      <td>${fmt(mRepay)}</td>
+      <td>${fmt(mMaint)}</td>
+      <td class="${mNet < 0 ? 'neg-val' : 'pos-val'}">${fmt(mNet)}</td>
+    `;
+    monthlyBody.appendChild(tr);
+  }
+  monthlyFoot.innerHTML = `<tr>
+    <td>합계</td>
+    <td>${fmtKwh(totGen)}</td>
+    <td>${fmt(totRev)}</td>
+    <td>${fmt(totRepay)}</td>
+    <td>${fmt(totMaint)}</td>
+    <td>${fmt(totNet)}</td>
+  </tr>`;
+
+  const genNote = genMode === 'auto'
+    ? `지역 일조 피크시간 ${rData.peakH}h/년 × ${capacity}kW = ${fmtKwh(annualGen)} kWh (기상청 통계 기반)`
+    : `사용자 직접 입력 발전량 ${fmtKwh(annualGen)} kWh`;
+  document.getElementById('monthlyAssumptions').innerHTML = `
+    <strong>핵심 가정 (1년 차)</strong><br>
+    • 발전량: ${genNote}<br>
+    • 판매단가: ₩${priceKwh.toLocaleString()}/kWh (SMP + REC 합산 고정 단가)<br>
+    • 1년 차 대출: 사업자 ₩${(loan1Amt/100000000).toFixed(1)}억 + 신용 ₩${(loan2Amt/100000000).toFixed(1)}억 합산 월 이자 ${fmt(monthlyInterestGrace)}<br>
+    • 유지보수비: ${maintMode==='pct' ? '연간 매출의 5% 비례 배분' : `연 ₩${maintFixed.toLocaleString()} 고정 비례 배분`}<br>
+    • 월별 발전량: 지역 월별 가중치 적용
+  `;
+
+  // ── YEARLY TABLE (20 years) ────────────────────────────────────────────
+  const DEGRADATION = 0.005; // 0.5% per year
+
+  const yearlyBody = document.getElementById('yearlyBody');
+  const yearlyFoot = document.getElementById('yearlyFoot');
+  yearlyBody.innerHTML = '';
+
+  let cumNet = 0;
+  let yTotGen=0, yTotRev=0, yTotPrincipal=0, yTotInterest=0, yTotLoan=0, yTotMaint=0, yTotExpense=0, yTotNet=0;
+  let paybackYear = null;
+
+  // Per-loan annual payment → { principal, interest, total }
+  function loanAnnual(L, year) {
+    if (L.amt === 0) return { principal:0, interest:0, total:0 };
+    if (year <= L.grace) {
+      const interest = L.amt * (L.ratePct / 100);
+      return { principal:0, interest, total:interest };
+    }
+    const repayYear = year - L.grace;
+    if (repayYear > (L.term - L.grace)) return { principal:0, interest:0, total:0 };
+    if (L.repayType === 'equal_payment') {
+      let bal = L.amt;
+      for (let i = 0; i < (repayYear-1)*12; i++) {
+        const mI = bal * L.mR;
+        bal -= (L.mPmt - mI);
+      }
+      let ap=0, ai=0;
+      for (let i = 0; i < 12; i++) {
+        const mI = bal * L.mR;
+        const mP = L.mPmt - mI;
+        ai += mI; ap += mP; bal -= mP;
+      }
+      return { principal:ap, interest:ai, total:ap+ai };
+    } else {
+      const ap = L.amt / (L.term - L.grace);
+      const rem = L.amt - ap*(repayYear-1);
+      const ai = rem * (L.ratePct/100);
+      return { principal:ap, interest:ai, total:ap+ai };
+    }
+  }
+
+  // Combined annual loan payment
+  function getAnnualLoanPayment(year) {
+    const a = loanAnnual(L1, year);
+    const b = loanAnnual(L2, year);
+    return {
+      principal: a.principal + b.principal,
+      interest:  a.interest  + b.interest,
+      total:     a.total     + b.total
+    };
+  }
+
+  for (let y = 1; y <= 20; y++) {
+    const degFactor = Math.pow(1 - DEGRADATION, y - 1);
+    const yGen  = annualGen * degFactor;
+    const yRev  = yGen * priceKwh;
+    const yMaint = maintMode === 'pct' ? yRev * 0.05 : maintFixed;
+    const loanParts = getAnnualLoanPayment(y);
+    const yPrincipal = loanParts.principal;
+    const yInterest  = loanParts.interest;
+    const yLoan      = loanParts.total;
+    const yExpense = yLoan + yMaint;
+    const yNet  = yRev - yExpense;
+
+    cumNet += yNet;
+    if (paybackYear === null && cumNet >= 0) paybackYear = y;
+
+    yTotGen += yGen; yTotRev += yRev;
+    yTotPrincipal += yPrincipal; yTotInterest += yInterest; yTotLoan += yLoan;
+    yTotMaint += yMaint; yTotExpense += yExpense; yTotNet += yNet;
+
+    const isGrace = y <= gracePeriod;
+    const isRepayEnd = (y === loan1Term || y === loan2Term);
+    const isPayback = y === paybackYear;
+
+    let cls = '';
+    if (isPayback) cls = 'payback-row';
+    else if (isGrace) cls = 'grace-row';
+    else if (isRepayEnd) cls = 'repay-end';
+
+    const tr = document.createElement('tr');
+    tr.className = cls;
+    tr.innerHTML = `
+      <td>${y}년차${isGrace ? ' 🔶' : ''}${isPayback ? ' ✅' : ''}</td>
+      <td>${fmtKwh(yGen)}</td>
+      <td>${fmt(yRev)}</td>
+      <td>${yPrincipal > 0 ? fmt(yPrincipal) : '<span style="color:var(--muted)">—</span>'}</td>
+      <td>${fmt(yInterest)}</td>
+      <td>${fmt(yLoan)}</td>
+      <td>${fmt(yMaint)}</td>
+      <td>${fmt(yExpense)}</td>
+      <td class="${yNet<0?'neg-val':'pos-val'}">${fmt(yNet)}</td>
+      <td class="${cumNet<0?'cum-neg':'cum-pos'}">${fmt(cumNet)}</td>
+    `;
+    yearlyBody.appendChild(tr);
+  }
+
+  yearlyFoot.innerHTML = `<tr>
+    <td>20년 합계</td>
+    <td>${fmtKwh(yTotGen)}</td>
+    <td>${fmt(yTotRev)}</td>
+    <td>${fmt(yTotPrincipal)}</td>
+    <td>${fmt(yTotInterest)}</td>
+    <td>${fmt(yTotLoan)}</td>
+    <td>${fmt(yTotMaint)}</td>
+    <td>${fmt(yTotExpense)}</td>
+    <td>${fmt(yTotNet)}</td>
+    <td>${fmt(cumNet)}</td>
+  </tr>`;
+
+  const r1Label = repay1Type === 'equal_payment' ? '원리금균등' : '원금균등';
+  const r2Label = repay2Type === 'equal_payment' ? '원리금균등' : '원금균등';
+  document.getElementById('yearlyAssumptions').innerHTML = `
+    <strong>핵심 가정 (장기)</strong><br>
+    • 패널 열화율: 연 0.5% 발전량 감소 (누적 20년 차: ${(Math.pow(0.995,19)*100).toFixed(1)}%)<br>
+    • 대출①(사업자): ₩${(loan1Amt/100000000).toFixed(1)}억 / ${loan1Rate}% / 거치 ${loan1Grace}년 / 총 ${loan1Term}년 / ${r1Label}<br>
+    • 대출②(신용): ₩${(loan2Amt/100000000).toFixed(1)}억 / ${loan2Rate}% / 거치 ${loan2Grace}년 / 총 ${loan2Term}년 / ${r2Label}<br>
+    • 유지보수비: ${maintMode==='pct' ? '연간 매출의 5%' : `연 고정 ₩${maintFixed.toLocaleString()}`}<br>
+    • SMP+REC 단가 고정 적용 (실제 SMP는 변동 가능)<br>
+    • 🔶 거치 기간 / ✅ 투자 회수 연차 / 파란 행: 대출 만료
+    ${paybackYear ? `<br>• <strong>예상 투자 회수 시점: ${paybackYear}년 차</strong>` : '<br>• <strong>20년 내 투자 회수 미달성</strong>'}
+  `;
+
+  // ── KPI ───────────────────────────────────────────────────────────────
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi sun">
+      <div class="kpi-label">연간 예상 발전량</div>
+      <div class="kpi-value">${(annualGen/1000).toFixed(1)}MWh</div>
+      <div class="kpi-sub">${fmtKwh(annualGen)} kWh / 년</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">연간 예상 매출 (1년차)</div>
+      <div class="kpi-value">${(annualRevYear1/100000000).toFixed(2)}억</div>
+      <div class="kpi-sub">${fmt(annualRevYear1)}</div>
+    </div>
+    <div class="kpi neg">
+      <div class="kpi-label">연간 이자 합산 (1년차)</div>
+      <div class="kpi-value">${(monthlyInterestGrace*12/100000000).toFixed(2)}억</div>
+      <div class="kpi-sub">사업자+신용 ${fmt(monthlyInterestGrace*12)}</div>
+    </div>
+    <div class="kpi grass">
+      <div class="kpi-label">예상 투자회수 시점</div>
+      <div class="kpi-value">${paybackYear ? paybackYear + '년차' : '20년↑'}</div>
+      <div class="kpi-sub">20년 누적 순수익 ${fmt(cumNet)}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">kWh 판매단가</div>
+      <div class="kpi-value">₩${priceKwh.toLocaleString()}</div>
+      <div class="kpi-sub">SMP + REC 합산</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">지역 / 설비용량</div>
+      <div class="kpi-value">${capacity}kW</div>
+      <div class="kpi-sub">${region} · 피크시간 ${rData.peakH}h</div>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
